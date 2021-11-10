@@ -6,6 +6,10 @@ interface Cell {
   status: Status;
 }
 
+interface Cells {
+  [key: number]: Cell;
+}
+
 const colors = {
   dead: "#E0F4FF",
   alive: "#C5F5D4",
@@ -42,18 +46,21 @@ const styles = {
 };
 
 function App() {
-  const [cells, setCells] = useState<Cell[]>([]);
-  const createCells = (): Cell[] => {
-    return Array.from({ length: numberOfCells }, (_, i) => {
-      return { id: i + 1, status: "dead" };
-    });
+  const [cellsObj, setCellsObj] = useState<Cells>({});
+  const createCellsObj = () => {
+    return Array.from({ length: numberOfCells }, (_, i) => i + 1).reduce(
+      (acc, id) => {
+        return { ...acc, [id]: { status: "dead", id } };
+      },
+      {}
+    );
   };
 
   useEffect(() => {
-    if (!cells.length) {
-      setCells(createCells());
+    if (!Object.keys(cellsObj).length) {
+      setCellsObj(createCellsObj());
     }
-  }, [cells]);
+  }, [cellsObj]);
 
   const getStatus = (status: Status): Status => {
     const statusMap = {
@@ -65,15 +72,14 @@ function App() {
   };
 
   const setCellStatus = (id: number, status: Status) => {
-    const updatedCells = cells.map((cell) => {
-      return cell.id === id ? { ...cell, status: getStatus(status) } : cell;
+    setCellsObj({
+      ...cellsObj,
+      [id]: { ...cellsObj[id], status: getStatus(status) },
     });
-
-    setCells(updatedCells);
   };
 
   const resetCells = () => {
-    setCells(createCells());
+    setCellsObj(createCellsObj());
   };
 
   const getRow = (id: number) => Math.ceil(id / rowLength);
@@ -94,7 +100,7 @@ function App() {
     const right = getValidCell(id, id + 1);
     const topLeft = top && getValidCell(top, top - 1);
     const topRight = top && getValidCell(top, top + 1);
-    const bottomLeft =  bottom && getValidCell(bottom, bottom - 1);
+    const bottomLeft = bottom && getValidCell(bottom, bottom - 1);
     const bottomRight = bottom && getValidCell(bottom, bottom + 1);
 
     return [
@@ -110,16 +116,33 @@ function App() {
   };
 
   const nextGeneration = () => {
-    cells.map((cell) => {
-      const neighbours = getNeighbours(cell.id);
-      console.log(cell.id, neighbours);
-    });
+    const newCellsObj = Object.entries(cellsObj).reduce((acc, [key, cell]) => {
+      const activeNeighbours = getNeighbours(cell.id).filter((id) => {
+        return cellsObj[id]?.status === "alive";
+      });
+
+      // kill cells
+      if (activeNeighbours.length > 3 || activeNeighbours.length < 2) {
+        return { ...acc, [cell.id]: { ...cell, status: "dead" } };
+      }
+
+      // spawn cells
+      if (activeNeighbours.length === 3) {
+        return { ...acc, [cell.id]: { ...cell, status: "alive" } };
+      }
+
+      // cell unchanged
+      return { ...acc, [cell.id]: { ...cell } };
+    }, {});
+
+
+    setCellsObj(newCellsObj);
   };
 
   return (
     <div style={styles.wrapper}>
       <div style={styles.grid}>
-        {cells.map(({ id, status }) => (
+        {Object.entries(cellsObj).map(([key, { status, id }]) => (
           <button
             type="button"
             onClick={() => setCellStatus(id, status)}

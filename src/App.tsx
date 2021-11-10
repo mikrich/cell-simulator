@@ -144,12 +144,13 @@ function App() {
       <div style={styles.grid}>
         {Object.entries(cellsObj).map(([key, { status, id }]) => (
           <button
+            data-testid={`button-${id}`}
+            key={key}
+            title="cell"
             type="button"
             onClick={() => setCellStatus(id, status)}
             style={styles.cell(status)}
-          >
-            {id}
-          </button>
+          />
         ))}
       </div>
       <div style={styles.buttons}>

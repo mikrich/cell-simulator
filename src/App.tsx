@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 
-type Status  =  "nuetral" | "dead" | "alive";
+type Status = "nuetral" | "dead" | "alive";
 interface Cell {
   id: number;
   status: Status;
 }
 
 const colors = {
-  nuetral: 'blue',
-  dead: 'red',
-  alive: 'green'
-}
+  nuetral: "#E0F4FF",
+  dead: "#F6E1DC",
+  alive: "#C5F5D4",
+};
 
 const rowLength = 10;
 const styles = {
@@ -21,14 +21,19 @@ const styles = {
     justifyContent: "center",
   },
   grid: {
-    backgroundColor: "#000",
     display: "grid",
     gridTemplateColumns: `repeat(${rowLength}, 1fr)`,
     columnGap: 3,
     rowGap: 3,
     padding: 3,
   },
-  cell: (status: Status) => ({ borderWidth: 0, width: 30, height: 30, backgroundColor: colors[status] })
+  cell: (status: Status) => ({
+    cursor: "pointer",
+    borderWidth: 0,
+    width: 30,
+    height: 30,
+    backgroundColor: colors[status],
+  }),
 };
 
 function App() {
@@ -45,11 +50,32 @@ function App() {
     }
   }, [cells]);
 
+  const getStatus = (status: Status): Status => {
+    const statusMap = {
+      nuetral: "alive",
+      alive: "dead",
+      dead: "nuetral",
+    };
+
+    return statusMap[status] as Status;
+  };
+  const updateCellStatus = (id: number, status: Status) => {
+    const updatedCells = cells.map((cell) => {
+      return cell.id === id ? { ...cell, status: getStatus(status) } : cell;
+    });
+
+    setCells(updatedCells);
+  };
+
   return (
     <div style={styles.wrapper}>
       <div style={styles.grid}>
         {cells.map(({ id, status }) => (
-          <button style={styles.cell(status)}>{id}</button>
+          <button
+            type="button"
+            onClick={() => updateCellStatus(id, status)}
+            style={styles.cell(status)}
+          />
         ))}
       </div>
     </div>

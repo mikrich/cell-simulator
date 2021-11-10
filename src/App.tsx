@@ -1,24 +1,57 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { useEffect, useState } from "react";
+
+type Status  =  "nuetral" | "dead" | "alive";
+interface Cell {
+  id: number;
+  status: Status;
+}
+
+const colors = {
+  nuetral: 'blue',
+  dead: 'red',
+  alive: 'green'
+}
+
+const rowLength = 10;
+const styles = {
+  wrapper: {
+    height: "100vh",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  grid: {
+    backgroundColor: "#000",
+    display: "grid",
+    gridTemplateColumns: `repeat(${rowLength}, 1fr)`,
+    columnGap: 3,
+    rowGap: 3,
+    padding: 3,
+  },
+  cell: (status: Status) => ({ borderWidth: 0, width: 30, height: 30, backgroundColor: colors[status] })
+};
 
 function App() {
+  const [cells, setCells] = useState<Cell[]>([]);
+
+  useEffect(() => {
+    // create cells on initial render
+    if (!cells.length) {
+      setCells(
+        Array.from({ length: 100 }, (_, i) => {
+          return { id: i + 1, status: "nuetral" };
+        })
+      );
+    }
+  }, [cells]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={styles.wrapper}>
+      <div style={styles.grid}>
+        {cells.map(({ id, status }) => (
+          <button style={styles.cell(status)}>{id}</button>
+        ))}
+      </div>
     </div>
   );
 }

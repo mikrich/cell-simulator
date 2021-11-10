@@ -19,6 +19,7 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    flexDirection: "column" as const,
   },
   grid: {
     display: "grid",
@@ -34,19 +35,22 @@ const styles = {
     height: 30,
     backgroundColor: colors[status],
   }),
+  button: {
+    paddingTop: 10,
+  },
 };
 
 function App() {
   const [cells, setCells] = useState<Cell[]>([]);
+  const createCells = (): Cell[] => {
+    return Array.from({ length: 100 }, (_, i) => {
+      return { id: i + 1, status: "nuetral" };
+    });
+  };
 
   useEffect(() => {
-    // create cells on initial render
     if (!cells.length) {
-      setCells(
-        Array.from({ length: 100 }, (_, i) => {
-          return { id: i + 1, status: "nuetral" };
-        })
-      );
+      setCells(createCells());
     }
   }, [cells]);
 
@@ -59,12 +63,23 @@ function App() {
 
     return statusMap[status] as Status;
   };
-  const updateCellStatus = (id: number, status: Status) => {
+
+  const setCellStatus = (id: number, status: Status) => {
     const updatedCells = cells.map((cell) => {
       return cell.id === id ? { ...cell, status: getStatus(status) } : cell;
     });
 
     setCells(updatedCells);
+  };
+
+  const resetCells = () => {
+    setCells(createCells());
+  };
+
+  const nextGeneration = () => {
+    cells.map((cell) => {
+      console.log(cell);
+    });
   };
 
   return (
@@ -73,10 +88,16 @@ function App() {
         {cells.map(({ id, status }) => (
           <button
             type="button"
-            onClick={() => updateCellStatus(id, status)}
+            onClick={() => setCellStatus(id, status)}
             style={styles.cell(status)}
           />
         ))}
+      </div>
+      <div style={styles.button}>
+        <button onClick={resetCells}>RESET</button>
+        <button onClick={nextGeneration} title="next generation">
+          NEXT GENERATION
+        </button>
       </div>
     </div>
   );

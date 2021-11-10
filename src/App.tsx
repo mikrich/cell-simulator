@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react";
 
-type Status = "nuetral" | "dead" | "alive";
+type Status = "dead" | "alive";
 interface Cell {
   id: number;
   status: Status;
 }
 
 const colors = {
-  nuetral: "#E0F4FF",
-  dead: "#F6E1DC",
+  dead: "#E0F4FF",
   alive: "#C5F5D4",
 };
 
 const rowLength = 10;
+const numberOfCells = 100;
+
 const styles = {
   wrapper: {
     height: "100vh",
@@ -35,7 +36,7 @@ const styles = {
     height: 30,
     backgroundColor: colors[status],
   }),
-  button: {
+  buttons: {
     paddingTop: 10,
   },
 };
@@ -43,8 +44,8 @@ const styles = {
 function App() {
   const [cells, setCells] = useState<Cell[]>([]);
   const createCells = (): Cell[] => {
-    return Array.from({ length: 100 }, (_, i) => {
-      return { id: i + 1, status: "nuetral" };
+    return Array.from({ length: numberOfCells }, (_, i) => {
+      return { id: i + 1, status: "dead" };
     });
   };
 
@@ -56,9 +57,8 @@ function App() {
 
   const getStatus = (status: Status): Status => {
     const statusMap = {
-      nuetral: "alive",
       alive: "dead",
-      dead: "nuetral",
+      dead: "alive",
     };
 
     return statusMap[status] as Status;
@@ -76,9 +76,43 @@ function App() {
     setCells(createCells());
   };
 
+  const getRow = (id: number) => Math.ceil(id / rowLength);
+  const isOnSameRow = (cellId: number, neighbourId: number) => {
+    return getRow(cellId) === getRow(neighbourId);
+  };
+
+  const getValidCell = (cellId: number, neighbourId: number) => {
+    // check cell appears on the same row otherwise return 0
+    return isOnSameRow(cellId, neighbourId) ? neighbourId : 0;
+  };
+
+  const getNeighbours = (id: number): number[] => {
+    const top = id - rowLength > 0 ? id - rowLength : 0;
+    const bottom = id + rowLength < numberOfCells ? id + rowLength : 0;
+
+    const left = getValidCell(id, id - 1);
+    const right = getValidCell(id, id + 1);
+    const topLeft = top && getValidCell(top, top - 1);
+    const topRight = top && getValidCell(top, top + 1);
+    const bottomLeft =  bottom && getValidCell(bottom, bottom - 1);
+    const bottomRight = bottom && getValidCell(bottom, bottom + 1);
+
+    return [
+      topLeft,
+      top,
+      topRight,
+      left,
+      right,
+      bottomLeft,
+      bottom,
+      bottomRight,
+    ];
+  };
+
   const nextGeneration = () => {
     cells.map((cell) => {
-      console.log(cell);
+      const neighbours = getNeighbours(cell.id);
+      console.log(cell.id, neighbours);
     });
   };
 
@@ -90,10 +124,12 @@ function App() {
             type="button"
             onClick={() => setCellStatus(id, status)}
             style={styles.cell(status)}
-          />
+          >
+            {id}
+          </button>
         ))}
       </div>
-      <div style={styles.button}>
+      <div style={styles.buttons}>
         <button onClick={resetCells}>RESET</button>
         <button onClick={nextGeneration} title="next generation">
           NEXT GENERATION
